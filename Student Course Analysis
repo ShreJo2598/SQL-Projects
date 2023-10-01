@@ -1,0 +1,143 @@
+--Task Set 1 
+--Shreya Sandeep Joshi
+
+--Question1–List all instructors. Show salutation in all lower cases, last name in all upper cases and phone
+--number in the format of '(xxx) xxx-xxxx'. (HINT: use LOWER, UPPER and SUBSTR function)
+
+SELECT LOWER(SALUTATION) AS SALUTATION, UPPER(LAST_NAME) AS LAST_NAME, CONCAT('(',SUBSTR(i.PHONE, 1, 3)) || ')' || SUBSTR(i.PHONE, 4,3) || '-' || SUBSTR(i.PHONE, 7,4) AS PHONE
+FROM INSTRUCTOR i ;
+
+--Question2--List all students (display student_id, first name, last name, street address, zipcode, city, and
+--state) who live in New York, NY. Sort results by last name, and then first name, in descending
+--order.
+
+SELECT * FROM Student;
+SELECT * FROM zipcode;
+
+select student.student_id, student.first_name, student.last_name, student.street_address, student.zip, zipcode.city, zipcode.state
+from 
+student left join zipcode 
+on student.zip = zipcode.zip
+
+WHERE
+zipcode.city = 'New York'
+AND zipcode.state = 'NY'
+
+ORDER BY student.last_name DESC , student.first_name DESC ;
+
+-- Can use alias for student, or zipcode so that we dont have to keep repeating its name.
+
+--Question3--Display the city in which each instructor lives. List first name, last name, zip, city, and state.
+--Display "N/A" for zip, city, and state if an instructor does not have a zipcode. (HINT: left join
+--INSTRUCTOR and ZIPCODE; use NVL function)
+
+SELECT * FROM student;
+SELECT * FROM zipcode;
+
+select instructor.first_name, instructor.last_name, NVL(instructor.zip, 'N/A'), NVL(zipcode.city, 'N/A'), NVL(zipcode.state, 'N/A')
+from
+instructor left join zipcode
+on instructor.zip = zipcode.zip ;
+
+--Question4--Show the number of instructors who live in NY state and has a street number of 518. (HINT:
+--use string functions such as SUBSTR and INSTR)
+
+Select zipcode.state, COUNT(*) AS Instructor_count
+from
+instructor LEFT JOIN zipcode
+on instructor.zip = zipcode.zip
+
+WHERE zipcode.state = 'NY' 
+AND 
+instructor.street_address like '518%'
+
+group by zipcode.state;
+
+--Question5--Display the lowest, highest, and average numeric grade of Project grade type. (HINT: use
+--the MIN, MAX, and AVG function; join GRADE and GRADE_TYPE)
+
+SELECT MAX(GRADE.NUMERIC_GRADE) AS MAX_GRADE, MIN(GRADE.NUMERIC_GRADE) AS MIN_GRADE, AVG(GRADE.NUMERIC_GRADE) AS AVG_GRADE, GRADE_TYPE.DESCRIPTION
+FROM GRADE
+LEFT JOIN GRADE_TYPE on GRADE_TYPE.GRADE_TYPE_CODE = GRADE.GRADE_TYPE_CODE
+GROUP BY GRADE_TYPE.DESCRIPTION HAVING GRADE_TYPE.DESCRIPTION = 'Project' ;
+
+--Question6-- List all students (display student_id, first name, last name, and registration date) who
+--registered on or before 2/15/2007 but have not enrolled in any course. (HINT: left outer join
+--STUDENT and ENROLLMENT; use the TO_DATE function)
+
+SELECT STUDENT.STUDENT_ID, STUDENT.FIRST_NAME,STUDENT.LAST_NAME, STUDENT.REGISTRATION_DATE 
+FROM STUDENT LEFT OUTER JOIN ENROLLMENT ON ENROLLMENT.STUDENT_ID = STUDENT.STUDENT_ID 
+WHERE TO_DATE(STUDENT.REGISTRATION_DATE, 'DD-MM-YY') <= TO_DATE('15-FEB-07','DD-MM-YY')
+AND ENROLLMENT.STUDENT_ID IS NULL;
+
+--Question7--Find how many students are enrolled in sections taught by Todd Smythe. (HINT: join
+--INSTRUCTOR, SECTION, and ENROLLMENT)
+
+select COUNT(enrollment.student_id) AS Student_Count
+
+from
+instructor
+JOIN section
+on instructor.instructor_id = section.instructor_id
+
+JOIN Enrollment 
+on enrollment.section_id = section.section_id
+
+WHERE (instructor.first_name = 'Todd' AND instructor.last_name = 'Smythe') ;
+
+--Question8--Show all students who are taking, or have taken the course "Advanced Java Programming".
+--List student name, enrollment date, and section location. (HINT: join COURSE, SECTION,
+--ENROLLMENT, and STUDENT)
+
+select student.first_name, student.last_name, enrollment.enroll_date, section.location, course.course_no
+from
+student 
+JOIN Enrollment 
+on student.student_id = enrollment.student_id
+
+JOIN Section
+on Enrollment.section_id = section.section_id
+
+JOIN Course
+on section.course_no = course.course_no
+
+where
+course.description =  'Advanced Java Programming' ;
+
+--Question9--List the students who have received any numeric grade score of at least 95 in an Advanced
+--Java Programming course. Show student name, the grade type code, and the numeric grade.
+
+SELECT DISTINCT student.first_name, student.last_name, grade.grade_type_code, grade.numeric_grade
+from student
+JOIN Grade
+ON grade.student_id = student.student_id
+
+JOIN section
+on section.section_id = grade.section_id
+
+JOIN course
+on section.course_no = course.course_no
+
+where
+(course.description =  'Advanced Java Programming' AND grade.numeric_grade >= 95) ;
+
+--Question10--List the instructors who teach Advanced Java Programming (having a section with students
+--enrolled), without duplication. Show instructor name and course name. (HINT: use the
+--DISTINCT keyword)
+
+select DISTINCT instructor.first_name, instructor.last_name, course.description
+from
+instructor 
+JOIN section
+on instructor.instructor_id = section.instructor_id
+
+JOIN enrollment
+on Enrollment.section_id = section.section_id
+
+JOIN course
+on section.course_no = course.course_no
+
+where
+course.description =  'Advanced Java Programming' ;
+
+
